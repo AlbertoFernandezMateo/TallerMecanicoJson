@@ -17,8 +17,8 @@ import java.util.Objects;
         property = "Alberto"
 )
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = Mecanico.class, name = "AAAAA"),
-        @JsonSubTypes.Type(value = Revision.class, name = "BBBBB")
+        @JsonSubTypes.Type(value = Mecanico.class, name = "Mecanico"),
+        @JsonSubTypes.Type(value = Revision.class, name = "Revision")
 })
 
 public abstract class Trabajo {
