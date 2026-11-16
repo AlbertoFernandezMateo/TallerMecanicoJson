@@ -1,5 +1,6 @@
 package org.iesalandalus.programacion.tallermecanico.modelo.negocio.json;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.exc.StreamWriteException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.DatabindException;
@@ -21,7 +22,7 @@ public class Clientes implements IClientes {
     private static ObjectMapper mapper;
 
     private Clientes(){
-        mapper = new ObjectMapper();
+        mapper = JsonUtils.creadorMapas();
     }
 
     static Clientes getInstancia(){

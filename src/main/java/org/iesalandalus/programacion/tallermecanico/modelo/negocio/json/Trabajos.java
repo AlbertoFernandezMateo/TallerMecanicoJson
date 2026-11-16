@@ -1,12 +1,12 @@
 package org.iesalandalus.programacion.tallermecanico.modelo.negocio.json;
 
-import com.fasterxml.jackson.core.exc.StreamWriteException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DatabindException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.iesalandalus.programacion.tallermecanico.modelo.TallerMecanicoExcepcion;
 import org.iesalandalus.programacion.tallermecanico.modelo.dominio.*;
 import org.iesalandalus.programacion.tallermecanico.modelo.negocio.ITrabajos;
+
 
 import java.io.File;
 import java.io.IOException;
@@ -15,18 +15,16 @@ import java.util.*;
 
 public class Trabajos implements ITrabajos {
 
-    private static final String FICHERO_TRABAJOS = String.format("%s%s%s%s%s%s%s", "datos", File.separator, "ficheros", File.separator, "json", File.separator, "trabajos.json");
-    private static final TypeReference<List<Trabajo>> TYPE_LIST_TRABAJO = new TypeReference<>() {};
-
-    private static ObjectMapper mapper;
+    static File jsonFile = new File("datos/ficheros/json/trabajos.json");
+    ObjectMapper mapper = JsonUtils.creadorMapas();
+    private List<Trabajo> coleccionTrabajos;
     private static Trabajos instancia;
 
-
     private Trabajos() {
-        mapper = new ObjectMapper();
+        coleccionTrabajos = new ArrayList<>();
     }
 
-    static Trabajos getInstancia() {
+    public static Trabajos getInstancia() {
         if (instancia == null) {
             instancia = new Trabajos();
         }
@@ -38,41 +36,37 @@ public class Trabajos implements ITrabajos {
 
     }
 
-    public List<Trabajo> leer() {
-        List<Trabajo> trabajos = new ArrayList<>();
-        File fichero = new File(FICHERO_TRABAJOS);
-        if (fichero.exists()) {
-            try {
-                trabajos = mapper.readValue(fichero, TYPE_LIST_TRABAJO);
-            } catch (StreamWriteException e) {
-                System.err.printf("Error de sintaxis en el fichero. %s%n", e.getMessage());
-            } catch (DatabindException e) {
-                System.err.printf("Error relacionado con el mapeo. %s%n", e.getMessage());
-            } catch (IOException e) {
-                System.err.printf("Error al leer el fichero. %s%n", e.getMessage());
-            }
-        } else {
-            System.err.printf("El fichero %s no existe.%n", FICHERO_TRABAJOS);
-        }
-        return trabajos;
-    }
-
-    public void escribir(List<Trabajo> trabajos) {
-        File fichero = new File(FICHERO_TRABAJOS);
+    private void escribir(List<Trabajo> trabajos) {
         try {
-            mapper.writerWithDefaultPrettyPrinter().writeValue(fichero, trabajos);
-        } catch (StreamWriteException e) {
-            System.err.printf("Error de sintaxis en el fichero. %s%n", e.getMessage());
-        } catch (DatabindException e) {
-            System.err.printf("Error relacionado con el mapeo. %s%n", e.getMessage());
+            ObjectWriter writer = mapper.writerFor(
+                    new TypeReference<List<Trabajo>>() {}
+            ).withDefaultPrettyPrinter();
+
+            writer.writeValue(jsonFile, trabajos);
+
+
         } catch (IOException e) {
-            System.err.printf("Error al escribir el fichero. %s%n", e.getMessage());
+            e.printStackTrace();
         }
     }
 
     @Override
     public void terminar() {
 
+    }
+
+    private List<Trabajo> leer() {
+        try
+        {
+            return mapper.readValue(jsonFile, new TypeReference<>() {});
+
+        }
+        catch (IOException e)
+        {
+            System.out.println(e.getMessage());
+        }
+
+        return new ArrayList<>();
     }
 
     @Override
@@ -82,36 +76,31 @@ public class Trabajos implements ITrabajos {
 
     @Override
     public List<Trabajo> get(Cliente cliente) {
-        Objects.requireNonNull(cliente,"El cliente no puede ser nulo.");
-        List<Trabajo> trabajosCliente = new ArrayList<>();
-        List<Trabajo> trabajos = leer();
-        for (Trabajo trabajo : trabajos) {
-            if(trabajo.getCliente().equals(cliente)){
-                trabajosCliente.add(trabajo);
+        List<Trabajo> trabajosCliente = leer();
+        for (Trabajo Trabajo : trabajosCliente) {
+            if (Trabajo.getCliente().equals(cliente)) {
+                coleccionTrabajos.add(Trabajo);
             }
         }
-        return trabajosCliente;
+        return coleccionTrabajos;
     }
 
     @Override
     public List<Trabajo> get(Vehiculo vehiculo) {
-        Objects.requireNonNull(vehiculo,"El vehiculo no puede ser nulo.");
-        List<Trabajo> trabajosVehiculo = new ArrayList<>();
-        List<Trabajo> trabajos = leer();
-        for (Trabajo trabajo : trabajos) {
-            if(trabajo.getVehiculo().equals(vehiculo)){
-                trabajosVehiculo.add(trabajo);
+        List<Trabajo> trabajosVehiculo = leer();
+        for (Trabajo Trabajo : trabajosVehiculo) {
+            if (Trabajo.getVehiculo().equals(vehiculo)) {
+                coleccionTrabajos.add(Trabajo);
             }
         }
-        return trabajosVehiculo;
+        return coleccionTrabajos;
     }
 
     @Override
     public Map<TipoTrabajo, Integer> getEstadisticasMensuales(LocalDate mes) {
         Objects.requireNonNull(mes, "El mes no puede ser nulo.");
         Map<TipoTrabajo, Integer> estadisticas = inicializarEstadisticas();
-        List<Trabajo> trabajos = leer();
-        for (Trabajo trabajo : trabajos) {
+        for (Trabajo trabajo : coleccionTrabajos) {
             LocalDate fecha = trabajo.getFechaInicio();
             if (fecha.getMonthValue() == mes.getMonthValue() && fecha.getYear() == mes.getYear()) {
                 TipoTrabajo tipoTrabajo = TipoTrabajo.get(trabajo);
@@ -131,13 +120,28 @@ public class Trabajos implements ITrabajos {
 
     @Override
     public void insertar(Trabajo trabajo) throws TallerMecanicoExcepcion {
-        Objects.requireNonNull(trabajo, "No se puede insertar un trabajo nulo.");
+        Objects.requireNonNull(trabajo, "El trabajo no puede ser nulo");
+        comprobarTrabajo(trabajo.getCliente(),trabajo.getVehiculo(),trabajo.getFechaInicio());
         List<Trabajo> trabajos = leer();
-        if (trabajos.contains(trabajo)) {
-            throw new TallerMecanicoExcepcion("El trabajo ya existe.");
-        } else {
-            trabajos.add(trabajo);
-            escribir(trabajos);
+        trabajos.add(trabajo);
+        escribir(trabajos);
+    }
+
+    private void comprobarTrabajo(Cliente cliente, Vehiculo vehiculo, LocalDate fechaInicio) throws TallerMecanicoExcepcion {
+        for (Trabajo trabajo : coleccionTrabajos) {
+            if (!trabajo.estaCerrado()) {
+                if (trabajo.getCliente().equals(cliente)) {
+                    throw new TallerMecanicoExcepcion("El cliente tiene otro trabajo en curso.");
+                } else if (trabajo.getVehiculo().equals(vehiculo)) {
+                    throw new TallerMecanicoExcepcion("El vehículo está actualmente en el taller.");
+                }
+            } else {
+                if (trabajo.getCliente().equals(cliente) && !fechaInicio.isAfter(trabajo.getFechaFin())) {
+                    throw new TallerMecanicoExcepcion("El cliente tiene otro trabajo posterior.");
+                } else if (trabajo.getVehiculo().equals(vehiculo) && !fechaInicio.isAfter(trabajo.getFechaFin())) {
+                    throw new TallerMecanicoExcepcion("El vehículo tiene otro trabajo posterior.");
+                }
+            }
         }
     }
 
@@ -152,8 +156,8 @@ public class Trabajos implements ITrabajos {
     private Trabajo getTrabajoAbierto(Vehiculo vehiculo) throws TallerMecanicoExcepcion {
         Objects.requireNonNull(vehiculo, "No puedo operar sobre un vehículo nulo.");
         Trabajo trabajoEncontrado = null;
-        List<Trabajo> trabajos = leer();
-        Iterator<Trabajo> iteradorTrabajos = trabajos.iterator();
+        coleccionTrabajos = leer();
+        Iterator<Trabajo> iteradorTrabajos = coleccionTrabajos.iterator();
         while (iteradorTrabajos.hasNext() && trabajoEncontrado == null) {
             Trabajo trabajo = iteradorTrabajos.next();
             if (trabajo.getVehiculo().equals(vehiculo) && !trabajo.estaCerrado()) {
@@ -189,21 +193,15 @@ public class Trabajos implements ITrabajos {
     @Override
     public Trabajo buscar(Trabajo trabajo) {
         Objects.requireNonNull(trabajo, "No se puede buscar un trabajo nulo.");
-        List<Trabajo> trabajos = leer();
-        int indice = trabajos.indexOf(trabajo);
-        return (indice == -1) ? null : trabajos.get(indice);
+        coleccionTrabajos = leer();
+        int indice = coleccionTrabajos.indexOf(trabajo);
+        return (indice == -1) ? null : coleccionTrabajos.get(indice);
     }
 
     @Override
     public void borrar(Trabajo trabajo) throws TallerMecanicoExcepcion {
-        Objects.requireNonNull(trabajo, "No se puede borrar un trabajo nulo.");
         List<Trabajo> trabajos = leer();
-        Trabajo trabajo1 = buscar(trabajo);
-        if (trabajo1 != null) {
-            trabajos.remove(trabajo1);
-            escribir(trabajos);
-        } else {
-            throw new TallerMecanicoExcepcion("No existe ningún trabajo con esa matrícula.");
-        }
+        trabajos.removeIf(trabajo1 -> Objects.equals(trabajo1.getCliente(), trabajo.getCliente()));
+        escribir(trabajos);
     }
 }

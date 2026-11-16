@@ -22,7 +22,7 @@ public class Vehiculos implements IVehiculos {
     private static Vehiculos instancia;
 
     private Vehiculos() {
-        mapper = new ObjectMapper();
+        mapper = JsonUtils.creadorMapas();
     }
 
     static Vehiculos getInstancia() {

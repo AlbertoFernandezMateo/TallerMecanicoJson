@@ -14,7 +14,7 @@ import java.util.Objects;
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
-        property = "Alberto"
+        property = "tipo"
 )
 @JsonSubTypes({
         @JsonSubTypes.Type(value = Mecanico.class, name = "Mecanico"),
@@ -152,6 +152,7 @@ public abstract class Trabajo {
         return (estaCerrado()) ? (int) ChronoUnit.DAYS.between(fechaInicio, fechaFin) : 0;
     }
 
+    @JsonIgnore
     public abstract float getPrecioEspecifico();
 
     @Override

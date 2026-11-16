@@ -6,9 +6,9 @@
     "telefono" : "950111111"
   },
   "vehiculo" : {
-    "marca": "Seat",
-    "modelo": "León",
-    "matricula": "1111BBB"
+    "marca" : "Seat",
+    "modelo" : "León",
+    "matricula" : "1111BBB"
   },
   "fechaInicio" : "2025-11-01",
   "horas" : 24
@@ -28,4 +28,19 @@
   "fechaFin" : "2025-11-02",
   "horas" : 11,
   "precioMaterial" : 12.0
+}, {
+  "tipo" : "Mecanico",
+  "cliente" : {
+    "nombre" : "Bob Esponja",
+    "dni" : "11223344B",
+    "telefono" : "950112233"
+  },
+  "vehiculo" : {
+    "marca" : "Mercedes-Benz",
+    "modelo" : "eSprinter",
+    "matricula" : "3333DDD"
+  },
+  "fechaInicio" : "2026-11-05",
+  "horas" : 0,
+  "precioMaterial" : 0.0
 } ]

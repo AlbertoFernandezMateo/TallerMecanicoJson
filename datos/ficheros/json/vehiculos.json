@@ -18,4 +18,8 @@
   "marca" : "Seat",
   "modelo" : "León",
   "matricula" : "9999ZZZ"
+}, {
+  "marca" : "Ford",
+  "modelo" : "Tourneo",
+  "matricula" : "7894BBB"
 } ]
