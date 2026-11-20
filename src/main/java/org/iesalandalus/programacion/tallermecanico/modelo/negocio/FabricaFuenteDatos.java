@@ -2,6 +2,7 @@ package org.iesalandalus.programacion.tallermecanico.modelo.negocio;
 
 import org.iesalandalus.programacion.tallermecanico.modelo.negocio.ficheros.xml.FuenteDatosFicherosXML;
 import org.iesalandalus.programacion.tallermecanico.modelo.negocio.json.FuenteDatosFicherosJSON;
+import org.iesalandalus.programacion.tallermecanico.modelo.negocio.sql.FuenteDatosFicherosMySQL;
 
 
 public enum FabricaFuenteDatos {
@@ -17,6 +18,10 @@ public enum FabricaFuenteDatos {
         public IFuenteDatos crear() {
             return new FuenteDatosFicherosJSON();
         }
+    },
+    MYSQL{
+        @Override
+        public IFuenteDatos crear() {return new FuenteDatosFicherosMySQL();}
     };
 
 
